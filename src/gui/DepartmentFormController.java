@@ -1,19 +1,22 @@
 package gui;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import db.DbException;
+import gui.listeners.DataChangeListener;
 import gui.util.Alerts;
 import gui.util.Constraints;
 import gui.util.Utils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Alert.AlertType;
 import model.entities.Department;
 import model.services.DepartmentService;
 
@@ -22,6 +25,8 @@ public class DepartmentFormController implements Initializable {
 	private Department entity;
 	
 	private DepartmentService service;
+	
+	private List<DataChangeListener> dataChangeListeners = new ArrayList();
 	
 	@FXML
 	private TextField txtId;
@@ -46,6 +51,10 @@ public class DepartmentFormController implements Initializable {
 		this.service = service;
 	}
 	
+	//Adiciona esse listener em uma lista
+	public void subscribeDataChangeListener(DataChangeListener listener) {
+		dataChangeListeners.add(listener);
+	}
 	
 	@FXML
 	public void onBtSaveAction(ActionEvent event) {
@@ -57,7 +66,12 @@ public class DepartmentFormController implements Initializable {
 		}
 		try {
 		entity = getFormData();
+		
+		//Salva ou atualiza os dados no banco de dados
 		service.saveOrUpdate(entity);
+		notifyDataChangeListeners();
+		
+		//Fecha a janela do formulario e volta para a lista de departamentos
 		Utils.currentStage(event).close();
 		} catch (DbException e) {
 			Alerts.showAlert("Error saving object", null, e.getMessage(), AlertType.ERROR);
@@ -65,6 +79,14 @@ public class DepartmentFormController implements Initializable {
 		
 	}
 	
+	//Aciona o evento na DepartmentListontroller para atualizar a table view
+	private void notifyDataChangeListeners() {
+		for (DataChangeListener listener : dataChangeListeners) {
+			listener.onDataChanged();
+		}
+	}
+
+	//Passa os dados dos textField para o objeto que vai ser salvo ou alterado
 	private Department getFormData() {
 		Department obj = new Department();
 		obj.setId(Utils.tryParseToInt(txtId.getText()));
@@ -84,11 +106,14 @@ public class DepartmentFormController implements Initializable {
 		
 	}
 	
+	//Inicializa os nodes quando entra tela limitando os text field
 	private void initializeNodes() {
 		Constraints.setTextFieldInteger(txtId);
 		Constraints.setTextFieldMaxLength(txtName, 30);
 	}
 	
+	
+	//Coloca os dados do objeto carregado na lista nos text field
 	public void updateFormData() {
 		if (entity == null) {
 			throw new IllegalStateException("Entity was null");
