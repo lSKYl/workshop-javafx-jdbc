@@ -53,7 +53,7 @@ public class MainViewController implements Initializable {
 		
 	}
 	
-	//Carregar outra tela quando necessário
+	//Carregar outra tela quando necessário e executa um função
 	private synchronized <T> void loadView(String absolutName,Consumer<T> initializingAction) {
 		try {
 			//Carrega os dados da tela nova
@@ -68,7 +68,9 @@ public class MainViewController implements Initializable {
 			mainVbox.getChildren().clear();
 			mainVbox.getChildren().add(mainMenu);
 			mainVbox.getChildren().addAll(newVBox.getChildren());
+			//Pega o controlador da nova cena.
 			T controller = loader.getController();
+			//Executa a função
 			initializingAction.accept(controller);
 		} catch (IOException e) {
 			Alerts.showAlert("IO Exception", "Error loagind view", e.getMessage(), AlertType.ERROR);
