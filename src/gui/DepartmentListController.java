@@ -88,6 +88,8 @@ public class DepartmentListController implements Initializable {
 			
 			DepartmentFormController controller = loader.getController();
 			controller.setDepartment(obj);
+			controller.setDepartmentService(new DepartmentService());
+			//Atualiza os campos do formulario com os dados do obj
 			controller.updateFormData();
 			Stage dialogStage = new Stage();
 			dialogStage.setTitle("Enter Department data");
